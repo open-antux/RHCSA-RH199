@@ -1,0 +1,24 @@
+---
+- name: Prepare lab. 1 SSH key
+  hosts: servera,serverb
+  gather_facts: false
+  become: true
+  
+  tasks:
+    - name: Create user operator1
+      user: 
+        state: present 
+        name: operator1
+        password: '$1$/wVguhcd$6JtUnHf70.46nh8HIR2D5/' # redhat
+
+    - name: Able password auth
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: "PasswordAuthentication no"
+        line: "PasswordAuthentication yes"
+        backrefs: true
+
+    - name: Restart ssh service
+      service:
+        name: sshd
+        state: restarted

@@ -1,0 +1,29 @@
+---
+- name: Check lab 1 SSH key
+  hosts: servera,serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get the public key of operator1 on serverb
+      slurp:
+        src: /home/operator1/.ssh/id_rsa.pub
+      register: operator1_pub_key
+      when: inventory_hostname == 'serverb'
+
+    - name: Get the authorized_keys of operator1 on servera
+      slurp:
+        src: /home/operator1/.ssh/authorized_keys
+      register: servera_authorized_keys
+      when: inventory_hostname == 'servera'
+
+    - name: Check if pubkey is in authorized_keys
+      assert:
+        that:
+          - "pub_key is in auth_keys"
+        fail_msg: "Lab failed, the ssh keys are not exchanged"
+        quiet: true
+      vars:
+        pub_key: "{{ hostvars['serverb'].operator1_pub_key.content | b64decode }}"
+        auth_keys: "{{ hostvars['servera'].servera_authorized_keys.content | b64decode }}"
+  

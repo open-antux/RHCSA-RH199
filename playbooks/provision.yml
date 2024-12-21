@@ -1,0 +1,50 @@
+---
+- name: Provision VM
+  hosts: lab
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Create student user on workstation server
+      user:
+        name: student
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+      delegate_to: workstation
+      run_once: true
+      register: student_user
+
+    - name: Create student user on servera and serverb
+      user:
+        name: student
+      when: inventory_hostname != 'workstation'
+
+    - name: Upload student public key on other two servers
+      ansible.posix.authorized_key:
+        user: student
+        key: "{{ student_user.ssh_public_key }}"
+        state: present
+      when: inventory_hostname != 'workstation'
+
+    - name: Add hosts in hosts file 
+      blockinfile:
+        path: /etc/hosts
+        block: |
+          172.25.250.9   student.mydomain.com  workstation
+          172.25.250.10  servera.mydomain.com  servera
+          172.25.250.11  serverb.mydomain.com  serverb
+        marker: ""
+
+    - name: Add sudo permission to student
+      lineinfile:
+        path: /etc/sudoers.d/ansible
+        state: present
+        line: "student ALL=(ALL) NOPASSWD: ALL"
+        create: true
+
+    - name: Install SELinux utils
+      dnf:
+        state: present
+        name: policycoreutils-python-utils
+
