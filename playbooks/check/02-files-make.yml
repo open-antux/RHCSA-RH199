@@ -1,0 +1,34 @@
+---
+- name: Check Lab 2. files-make
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  tasks:
+    - name: Check hardlinks
+      find: paths=/home/student/links recurse=true
+      register: find_res
+
+    - name: Check symlink
+      stat: path=/home/student/tempdir
+      register: stat_res
+
+    - name: Assert hardlinks
+      assert: 
+        that: 
+          - "find_res.matched == 1"
+          - "find_res.files[0].path == '/home/student/links/file.hardlink'"
+          - "find_res.files[0].nlink > 1"
+        fail_msg: "LAB FAILED: Error during the creation of the hardlink"
+        quiet: true
+
+    - name: Assert symlink
+      assert:
+        that:
+          - "stat_res.stat.exists"
+          - "stat_res.stat.path == '/home/student/tempdir'"
+          - "stat_res.stat.islnk"
+        fail_msg: "LAB FAILED: Error during the creation of the symlink"
+        quiet: true
+        
