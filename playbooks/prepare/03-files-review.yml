@@ -1,0 +1,13 @@
+---
+- name: Lab 3. files-review
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  tasks:
+    - name: Create directory files on servera
+      file: state=directory path=/home/student/{{ item }}
+      loop:
+        - Documents
+        - Videos

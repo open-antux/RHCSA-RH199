@@ -1,0 +1,56 @@
+---
+- name: Check lab 3. files-review
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  vars:
+    files:
+      - /home/student/Documents/project_plans/season1_project_plan.odf
+      - /home/student/Documents/project_plans/season2_project_plan.odf
+      - /home/student/Documents/my_bestseller/chapters/mystery_chapter3.odf
+      - /home/student/Documents/my_bestseller/chapters/mystery_chapter4.odf
+      - /home/student/Documents/my_bestseller/chapters/mystery_chapter5.odf
+      - /home/student/Documents/my_bestseller/chapters/mystery_chapter6.odf
+      - /home/student/Documents/my_bestseller/editor/mystery_chapter1.odf
+      - /home/student/Documents/my_bestseller/editor/mystery_chapter2.odf
+      - /home/student/Documents/backup/season2_project_plan.odf.back
+      - /home/student/Videos/season1/tv_season1_episode1.ogg
+      - /home/student/Videos/season1/tv_season1_episode2.ogg
+      - /home/student/Videos/season1/tv_season1_episode3.ogg
+      - /home/student/Videos/season1/tv_season1_episode4.ogg
+      - /home/student/Videos/season1/tv_season1_episode5.ogg
+      - /home/student/Videos/season1/tv_season1_episode6.ogg
+      - /home/student/Videos/season2/tv_season2_episode1.ogg
+      - /home/student/Videos/season2/tv_season2_episode2.ogg
+      - /home/student/Videos/season2/tv_season2_episode3.ogg
+      - /home/student/Videos/season2/tv_season2_episode4.ogg
+      - /home/student/Videos/season2/tv_season2_episode5.ogg
+      - /home/student/Videos/season2/tv_season2_episode6.ogg
+
+  tasks:
+    - name: Check files 
+      find:
+        paths: 
+          - /home/student/Documents
+          - /home/student/Videos
+        recurse: true
+      register: find_res
+
+    - name: Check all files exists
+      assert:
+        that: "item in list"
+        fail_msg: "LAB FAILED: Files doesn't maches"
+        quiet: true
+      loop: "{{ files | list }}"
+      vars: 
+        list: "{{ find_res.files | map(attribute='path') | list }}"
+
+    - name: Check hardlink
+      assert:
+        that: "(nlink | int) > 1"
+        fail_msg: "LAB FAILED: Missing hardlink to /home/student/Documents/backup/season2_project_plan.odf.back"
+        quiet: true
+      vars: 
+        nlink: "{{ (find_res.files | selectattr('path', 'match', '/home/student/Documents/backup/season2_project_plan.odf.back') | first).nlink }}"
