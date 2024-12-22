@@ -30,4 +30,10 @@ Vagrant.configure("2") do |config|
       end
     end
   end
+
+  VAGRANT_COMMAND = ARGV[0]
+  if VAGRANT_COMMAND == "ssh"
+    config.ssh.username = 'student'
+  end
+
 end

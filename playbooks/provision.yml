@@ -4,28 +4,42 @@
   become: true
   gather_facts: false
 
+  vars:
+    ansible_user: vagrant
+    ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
+
   tasks:
     - name: Create student user on workstation server
       user:
         name: student
-        generate_ssh_key: yes
-        ssh_key_bits: 2048
-        ssh_key_file: .ssh/id_rsa
-      delegate_to: workstation
+        password: "$1$IGBfzAun$cxL63lmjRG/m7xZBgx4IX/"
+
+    - name: Ensure that .ssh exists under student home
+      file:
+        state: directory
+        path: /home/student/.ssh
+        mode: 0700
+        owner: student
+        group: student
+
+    - name: Copy id_rsa to workstation
+      copy:
+        src: "{{ ansible_ssh_private_key_file }}"
+        dest: /home/student/.ssh/id_rsa
+        owner: student
+        group: student
+        mode: 0600
       run_once: true
-      register: student_user
+      delegate_to: workstation
 
-    - name: Create student user on servera and serverb
-      user:
-        name: student
-      when: inventory_hostname != 'workstation'
-
-    - name: Upload student public key on other two servers
-      ansible.posix.authorized_key:
-        user: student
-        key: "{{ student_user.ssh_public_key }}"
-        state: present
-      when: inventory_hostname != 'workstation'
+    - name: Copy vagrant authorized_keys to student user
+      copy:
+        src: /home/vagrant/.ssh/authorized_keys
+        dest: /home/student/.ssh/
+        owner: student
+        group: student
+        mode: 0600
+        remote_src: true
 
     - name: Add hosts in hosts file 
       blockinfile:
@@ -38,13 +52,10 @@
 
     - name: Add sudo permission to student
       lineinfile:
-        path: /etc/sudoers.d/ansible
+        path: /etc/sudoers.d/student
         state: present
-        line: "student ALL=(ALL) NOPASSWD: ALL"
+        line: "student ALL=(ALL) ALL"
         create: true
 
     - name: Install SELinux utils
-      dnf:
-        state: present
-        name: policycoreutils-python-utils
-
+      dnf: state=present name=policycoreutils-python-utils
