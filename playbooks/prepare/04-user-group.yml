@@ -1,0 +1,17 @@
+---
+- name: Lab 4. users-group
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create sysadmin users
+      user: name={{ item }} password='$1$aWW6UIIj$zlY7/QuzsvAnwdDYKmefk.'
+      loop: [sysadmin1,sysadmin2,sysadmin3]
+
+    - name: Create operator users
+      user: name={{ item }}
+      loop: [operator1,operator2,operator3]
+
+    
+

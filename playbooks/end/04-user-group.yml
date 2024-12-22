@@ -1,0 +1,24 @@
+---
+- name: End Lab 4. users-group
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Delete sysadmin users
+      user: state=absent name={{ item }} 
+      loop: [sysadmin1,sysadmin2,sysadmin3]
+
+    - name: Delete operator users
+      user: state=absent name={{ item }}
+      loop: [operator1,operator2,operator3]
+
+    - name: Delete groups
+      group: state=absent name={{ item }}
+      loop: [admin,operators]
+
+    - name: Delete sudoers file
+      file: state=absent path=/etc/sudoers.d/admin
+
+    
+

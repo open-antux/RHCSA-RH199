@@ -1,0 +1,37 @@
+---
+- name: Check Lab 4. users-group
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get groups
+      getent: database=group key={{ item }}
+      loop: [operators, admin]
+      register: groups_check
+
+    - name: Get sudoers permission for admin group
+      slurp: src=/etc/sudoers.d/admin
+      register: admin_sudoers
+
+    - name: Assert group
+      assert:
+        that:
+          - "(gid | int) == 30000"
+          - "'operator1,operator2,operator3' == operator_list"
+          - "'sysadmin1,sysadmin2,sysadmin3' == sysadmin_list"
+        fail_msg: "LAB FAILED: Error during the creation or adding group to users"
+        quiet: true
+      vars:
+        gid: "{{ (groups_check.results | selectattr('item', 'match', 'operators') | first).ansible_facts.getent_group.operators[1] }}"
+        operator_list: "{{ (groups_check.results | selectattr('item', 'match', 'operators') | first).ansible_facts.getent_group.operators[2] }}"
+        sysadmin_list: "{{ (groups_check.results | selectattr('item', 'match', 'admin') | first).ansible_facts.getent_group.admin[2] }}"
+
+    - name: Assert sudoers admin
+      assert: 
+        that:
+          - "'%admin ALL=(ALL) ALL\n' == sudoers_content"
+        fail_msg: "LAB FAILED: Error on sudoers content"
+        quiet: true
+      vars: 
+        sudoers_content: "{{ admin_sudoers.content | b64decode }}"
