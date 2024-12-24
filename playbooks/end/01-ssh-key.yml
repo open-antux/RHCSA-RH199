@@ -5,11 +5,8 @@
   become: true
   
   tasks:
-    - name: Create user operator1
-      user: 
-        state: absent
-        name: operator1
-        remove: true
+    - name: Delete user operator1
+      user: state=absent name=operator1 remove=true
 
     - name: Disable password access
       lineinfile:
@@ -19,7 +16,4 @@
         backrefs: true
 
     - name: Restart ssh service
-      service:
-        name: sshd
-        state: restarted
-    
+      service: name=sshd state=restarted
