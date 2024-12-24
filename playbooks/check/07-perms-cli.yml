@@ -1,0 +1,33 @@
+---
+- name: Check lab 7. perms-cli
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get /home/consultants infos
+      stat: path=/home/consultants
+      register: home_consultants
+
+    - name: Check if files exists
+      find: path=/home/consultants recurse=true
+      register: find_consultants
+
+    - name: Assert home consultants
+      assert:
+        that:
+          - "home_consultants.stat.exists"
+          - "home_consultants.stat.gr_name == 'consultants'"
+          - "home_consultants.stat.mode[2] == '7'"
+        fail_msg: "LAB FAILED: Directory doesn't exists or permission to group are wrong"
+        quiet: true
+
+    - name: Assert file permissions
+      assert:
+        that:
+          - "find_consultants.matched == 2"
+          - "['consultant1.txt','consultant2.txt'] == files"
+        fail_msg: "LAB FAILED: Files are not created or named wrongly"
+        quiet: true
+      vars:
+        files: "{{ find_consultants.files | map(attribute='path') | map('split', '/') | map('last') | sort }}"

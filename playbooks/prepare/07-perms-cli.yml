@@ -1,0 +1,19 @@
+---
+- name: Lab 7. perms-cli
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create group
+      group: state=present name=consultants 
+
+    - name: Create users
+      user:
+        state: present
+        name: "{{ item }}"
+        password: '$1$0QIVsrLm$aIIMcGc4XJQZC3YdiaABS1'
+        groups: consultants
+        append: true
+      loop: [consultant1,consultant2]
+
