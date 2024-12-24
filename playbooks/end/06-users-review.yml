@@ -15,7 +15,7 @@
       group: state=absent name=consultants
 
     - name: Delete users in consultants group
-      user: state=absent name={{ item }}
+      user: state=absent name={{ item }} remove=true
       loop: [consultant1,consultant2,consultant3]
 
     - name: Remove sudo permission to consultants

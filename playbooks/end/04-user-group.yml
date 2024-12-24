@@ -6,11 +6,11 @@
 
   tasks:
     - name: Delete sysadmin users
-      user: state=absent name={{ item }} 
+      user: state=absent name={{ item }} remove=true
       loop: [sysadmin1,sysadmin2,sysadmin3]
 
     - name: Delete operator users
-      user: state=absent name={{ item }}
+      user: state=absent name={{ item }} remove=true
       loop: [operator1,operator2,operator3]
 
     - name: Delete groups
