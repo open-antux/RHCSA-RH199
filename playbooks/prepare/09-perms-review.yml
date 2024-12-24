@@ -1,0 +1,17 @@
+---
+- name: Lab 9. perms-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create group techdocs
+      group: state=present name=techdocs
+
+    - name: Create user tech1, tech2 and database1
+      user: state=present name={{ item.name }} groups={{ item.group }}
+      loop: 
+        - { name: 'tech1', group: 'techdocs' }
+        - { name: 'tech2', group: 'techdocs' }
+        - { name: 'database1', group: null }
+      

@@ -1,0 +1,33 @@
+---
+- name: Check lab 9. perms-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get /home/techdocs info
+      stat: path=/home/techdocs
+      register: techdocs_home
+
+    - name: Get /etc/login.defs configuration
+      slurp: path=/etc/login.defs
+      register: login_defs
+
+    - name: Assert /home/techdocs permission
+      assert:
+        that:
+          - "techdocs_home.stat.exists"
+          - "techdocs_home.stat.mode == '2770'"
+          - "techdocs_home.stat.gr_name == 'techdocs'"
+        fail_msg: "LAB FAILED: Home directory not created or setted permissions wrong"
+        quiet: true
+
+    - name: Assert login_defs
+      assert:
+        that:
+          - "umask == '007' or umask == '0007'"
+        fail_msg: "LAB FAILED: /etc/login.defs not configured correctly"
+        quiet: true
+      vars:
+        umask: "{{ login_defs.content | b64decode | regex_search('\nUMASK.*') | split('\t') | last }}"
+      

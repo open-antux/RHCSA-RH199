@@ -1,0 +1,19 @@
+---
+- name: End lab 9. perms-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Delete group techdocs
+      group: state=absent name=techdocs
+
+    - name: Delete users
+      user: state=absent name={{ item }} remove=true
+      loop: [tech1,tech2,database1]
+
+    - name: Restore /etc/login.defs configuration
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^UMASK.*'
+        line: 'UMASK  022'
