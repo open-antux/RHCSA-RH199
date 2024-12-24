@@ -1,0 +1,22 @@
+---
+- name: End lab 6. users-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Restore /etc/login.defs configuration
+      lineinfile:
+        path: /etc/login.defs
+        regexp: '^PASS_MAX_DAYS\t30'
+        line: 'PASS_MAX_DAYS  99999'
+
+    - name: Delete group consultants
+      group: state=absent name=consultants
+
+    - name: Delete users in consultants group
+      user: state=absent name={{ item }}
+      loop: [consultant1,consultant2,consultant3]
+
+    - name: Remove sudo permission to consultants
+      file: state=absent path=/etc/sudoers.d/consultants

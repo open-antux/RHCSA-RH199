@@ -1,0 +1,73 @@
+---
+- name: Check Lab 6. users-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  vars:
+    _optional: "{{ optional | bool | default(false) }}"
+
+  tasks:
+    - name: Get chage infos
+      command: chage -li {{ item }}
+      loop: [consultant1,consultant2,consultant3]
+      register: chage_consultants
+
+    - name: Get group consultants info
+      getent: database=group key=consultants
+
+    - name: Get sudoers permission
+      slurp: path=/etc/sudoers.d/consultants
+      register: sudoers_consultants
+
+    - name: Get login.defs
+      slurp: path=/etc/login.defs
+      register: login_defs
+
+    - name: Get date maximum
+      command: date -d "+90 days" "+%F"
+      register: maximum_date
+
+    - name: Assert consultants group
+      assert:
+        that:
+          - "getent_group.consultants[1] == '35000'"
+          - "'%consultants ALL=(ALL) ALL' in sudoers_permission"
+        fail_msg: "LAB FAILED: Error during creation of group or permission"
+        quiet: true
+      vars:
+        sudoers_permission: "{{ sudoers_consultants.content | b64decode }}"
+
+    - name: Assert login.defs permission
+      assert:
+        that:
+          - "pass_max_days == '30'"
+        fail_msg: "LAB FAILED: Error setting PASS_MAX_DAYS on /etc/login.defs"
+        quiet: true
+      vars:
+        pass_max_days: "{{ login_defs.content | b64decode | regex_search('\nPASS_MAX_DAYS.*') | split('\t') | last }}"
+
+    - block:
+      - name: Assert permission (not optionals)
+        assert:
+          that:
+            - "consultant_expires == expires_date"
+            - "consultant2_maximum_days == '15'"
+          fail_msg: "LAB FAILED: Error during assigning chage options"
+          quiet: true
+        vars:
+          consultant_expires: "{{ chage_consultants.results | map(attribute='stdout_lines') | map('select', 'match', 'Account expires') | map('regex_search', '[0-9]*\\-[0-9]{2}\\-[0-9]{2}') | unique | first }}"
+          expires_date: "{{ maximum_date.stdout }}" 
+          consultant2_maximum_days: "{{ (chage_consultants.results | selectattr('item', 'match', 'consultant2') | first).stdout | regex_search('\nMaximum number of days between password change.*', multiline=true) | split(': ') | last }}"
+
+    - block:
+      - name: Assert permission (optionals)
+        assert:
+          that:
+            - "password_change == '1'"
+          fail_msg: "LAB FAILED: Error during assigning chage options"
+          quiet: true
+        vars:
+          password_change: "{{ item[:3] | map('split', ': ') | map('last') | unique | length }}"
+        loop: "{{ chage_consultants.results | map(attribute='stdout_lines') }}"
+      when: _optional
