@@ -1,0 +1,56 @@
+---
+- name: Check lab 8. perms-default
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get /tmp/shared info
+      stat: path=/tmp/shared
+      register: shared_directory
+
+    - name: Get all files under /tmp/shared
+      find: path=/tmp/shared recurse=true
+      register: find_shared
+
+    - name: Get umask
+      shell: "echo 'redhat' | su - operator1 -c umask"
+      register: umask_operator1
+
+    - name: Assert /tmp/shared infos
+      assert:
+        that:
+          - "shared_directory.stat.exists"
+          - "shared_directory.stat.mode[0] == '2'"
+          - "shared_directory.stat.gr_name == 'operators'"
+        fail_msg: "LAB FAILED: Directory doesn't exists or wrong permission"
+        quiet: true
+
+    - name: Assert files in /tmp/shared
+      assert: 
+        that:
+          - "find_shared.matched == 6"
+          - "['defaults','group','ops_db.txt','ops_net.txt','ops_prod.txt','ops_prod2.txt'] == paths"
+          - "defaults.mode == '0644' and defaults.pw_name == 'operator1' and defaults.gr_name == 'operator1'"
+          - "group_shared.mode == '0644' and group_shared.pw_name == 'operator1' and group_shared.gr_name == 'operator1'"
+          - "ops_db.mode == '0644' and ops_db.pw_name == 'operator1' and ops_db.gr_name == 'operators'"
+          - "ops_net.mode == '0644' and ops_net.pw_name == 'operator1' and ops_net.gr_name == 'operators'"
+          - "ops_prod.mode == '0640' and ops_prod.pw_name == 'operator1' and ops_prod.gr_name == 'operators'"
+          - "ops_prod2.mode == '0660' and ops_prod2.pw_name == 'operator1' and ops_prod2.gr_name == 'operators'"
+        fail_msg: "LAB FAILED: Error during the creation of one of the files"
+        quiet: true
+      vars:
+        paths: "{{ find_shared.files | map(attribute='path') | map('split', '/') | map('last') | sort }}"
+        defaults: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/defaults') | first }}"
+        group_shared: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/group') | first }}"
+        ops_db: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/ops_db.txt') | first }}"
+        ops_net: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/ops_net.txt') | first }}"
+        ops_prod: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/ops_prod.txt') | first }}"
+        ops_prod2: "{{ find_shared.files | selectattr('path', 'match', '/tmp/shared/ops_prod2.txt') | first }}"
+
+    - name: Assert umask configuration
+      assert:
+        that:
+          - "umask_operator1.stdout[:4] == '0007'"
+        fail_msg: "LAB FAILED: umask not setted as default"
+        quiet: true

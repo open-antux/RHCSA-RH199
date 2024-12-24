@@ -1,0 +1,16 @@
+---
+- name: End Lab 8. perms-default
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Delete group operators
+      group: state=absent name=operators
+
+    - name: Delete operator1 user
+      user: state=absent name=operator1 remove=true
+      
+    - name: Remove files under /tmp/shared
+      file: state=absent path=/tmp/shared
+

@@ -1,0 +1,16 @@
+---
+- name: Lab 8. perms-default
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create group operators
+      group: state=present name=operators
+
+    - name: Create operator1 user
+      user: 
+        state: present 
+        name: operator1 
+        groups: operators 
+        password: '$1$dco/09/s$uP16Ua81o2AB0IMzmGv83.'
