@@ -5,12 +5,9 @@
   become: true
   become_user: student
 
-  #https://serverfault.com/questions/697859/ansible-local-action-stat-doesnt-find-my-file
   tasks:
     - name: Delete files
-      file:
-        state: absent
-        path: "{{ item }}"
+      file: state=absent path={{ item }}
       loop:
         - /home/student/tmpdir
         - /home/student/links
