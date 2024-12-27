@@ -8,6 +8,14 @@
     - name: Remove httpd package
       dnf: state=absent name=httpd
 
+    - name: Remove firewall rule
+      ansible.posix.firewalld:
+        state: disabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
+
     - name: Reset home permissions
       file: path=/home/student mode=0700
 
