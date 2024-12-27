@@ -58,4 +58,10 @@
         create: true
 
     - name: Install SELinux utils
-      dnf: state=present name=policycoreutils-python-utils
+      dnf: state=present name={{ item }}
+      loop: 
+        - policycoreutils-python-utils
+        - setroubleshoot-server
+    
+    - name: Enable and start setroubleshootd
+      service: state=started enabled=true name=setroubleshootd
