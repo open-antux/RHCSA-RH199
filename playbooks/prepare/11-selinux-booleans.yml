@@ -7,3 +7,11 @@
   tasks:
     - name: Install httpd
       dnf: state=present name=httpd
+
+    - name: Enable firewall rule
+      ansible.posix.firewalld:
+        state: enabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
