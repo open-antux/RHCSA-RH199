@@ -1,0 +1,60 @@
+---
+- name: Check lab 11. selinux-booleans
+  hosts: servera
+  gather_facts: false
+
+  tasks:
+    - name: Reboot the server
+      ansible.builtin.reboot: reboot_timeout=60
+
+    - name: Get userdir.conf configuration
+      slurp: path=/etc/httpd/conf.d/userdir.conf
+      register: userdir_conf
+
+    - name: Get permission of user home
+      stat: path=/home/student
+      register: home_student_stat
+
+    - name: getsebool config
+      command: "getsebool httpd_enable_homedirs"
+      register: httpd_bool
+
+    - name: Check content of website
+      command: "curl http://servera/~student/index.html"
+      register: webserver_content
+      delegate_to: workstation
+
+    - name: Assert userdir.conf config
+      assert:
+        that: 
+          - "userdir_default[0] == '#'"
+          - "userdir_public[0] != '#'"
+        fail_msg: "LAB FAILED: userdir.conf configured wrongly"
+        quiet: true
+      vars:
+        userdir: "{{ userdir_conf.content | b64decode }}"
+        userdir_default: "{{ userdir | regex_search('.*UserDir disabled.*', multiline=true) | regex_replace('^\\s+', '') }}"
+        userdir_public: "{{ userdir | regex_search('.*UserDir public_html.*', multiline=true) | regex_replace('^\\s+', '') }}"
+        
+    - name: SELinux booleans
+      assert:
+        that:
+          - "sebool == 'on'"
+        fail_msg: "LAB FAILED: SELinux boolean not setted correctly"
+        quiet: true
+      vars:
+        sebool: "{{ httpd_bool.stdout | split | last }}"
+
+    - name: Check /home/student permission
+      assert:
+        that:
+          - "home_student_stat.stat.mode[1:] == '711'"
+        fail_msg: "LAB FAILED: Permission setted wrong"
+        quiet: true
+
+    - name: Get the content of the webserver
+      assert: 
+        that:
+          - "webserver_content.stdout == 'This is student content on SERVERA.'"
+        fail_msg: "LAB FAILED: Httpd service not enabled or content wrong"
+        quiet: true
