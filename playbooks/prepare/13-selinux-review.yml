@@ -1,0 +1,40 @@
+---
+- name: Lab 13. selinux-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install http
+      dnf: state=present name=httpd
+
+    - name: Add firewall rule
+      ansible.posix.firewalld:
+        state: enabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
+
+    - name: Add /lab-content directory in httpd config
+      lineinfile:
+        state: present
+        path: /etc/httpd/conf/httpd.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: 'DocumentRoot "/var/www/html"', line: 'DocumentRoot "/lab-content"' }
+        - { regexp: '<Directory "/var/www/html">', line: '<Directory "/lab-content">' }
+
+    - name: Create /lab-content
+      file: state=directory path=/lab-content
+
+    - name: Create index.html
+      lineinfile:
+        state: present
+        path: /lab-content/lab.html
+        line: "This is the html file for the SELinux final lab on SERVERB."
+        create: true
+
+    - name: Start httpd service
+      service: state=restarted enabled=true name=httpd

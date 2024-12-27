@@ -1,0 +1,30 @@
+---
+- name: Check lab 13. selinux-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get directory context
+      command: "ls -Z /lab-content/lab.html"
+      register: context
+      
+    - name: Get webserver content
+      command: "curl http://serverb/lab.html"
+      register: webserver_content
+
+    - name: Assert context
+      assert:
+        that:
+          - "lab_context[2] == 'httpd_sys_content_t'"
+        fail_msg: "LAB FAILED: Wrong context setted"
+        quiet: true
+      vars:
+        lab_context: "{{ context.stdout | split | first | split(':') }}"
+
+    - name: Assert webserver reachability
+      assert:
+        that:
+          - "webserver_content.stdout == 'This is the html file for the SELinux final lab on SERVERB.'"
+        fail_msg: "LAB FAILED: Can't reach the webserver"
+        quiet: true

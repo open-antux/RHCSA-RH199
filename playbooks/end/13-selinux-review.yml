@@ -1,0 +1,20 @@
+---
+- name: End Lab 13. selinux-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove http
+      dnf: state=absent name=httpd
+
+    - name: Remove firewall rule
+      ansible.posix.firewalld:
+        state: disabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
+
+    - name: Remove /lab-content directory in httpd config
+      file: state=absent path=/lab-content
