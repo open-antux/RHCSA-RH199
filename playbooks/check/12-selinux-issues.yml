@@ -1,0 +1,31 @@
+---
+- name: Check lab. 12 selinux-issues
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get SELinux context
+      command: "ls -Z /custom/index.html"
+      register: context
+
+    - name: Check webserver content
+      command: "curl http://servera/index.html"
+      register: webserver_content
+      
+
+    - name: Assert Context
+      assert:
+        that:
+          - "index_context[2] == 'httpd_sys_content_t'"
+        fail_msg: "LAB FAILED: Wrong context setted"
+        quiet: true
+      vars:
+        index_context: "{{ context.stdout | split | first | split(':') }}"
+
+    - name: Assert webserver reachability
+      assert:
+        that:
+          - "webserver_content.stdout == 'This is SERVERA.'"
+        fail_msg: "LAB FAILED: Webserver not reachable"
+        quiet: true

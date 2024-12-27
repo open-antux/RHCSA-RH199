@@ -1,0 +1,20 @@
+---
+- name: Lab 12. selinux-issues
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove httpd
+      dnf: state=absent name=httpd
+
+    - name: Remove firewall rule
+      ansible.posix.firewalld:
+        state: disabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
+
+    - name: Remove /custom directory
+      file: state=absent path=/custom

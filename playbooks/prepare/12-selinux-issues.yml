@@ -1,0 +1,40 @@
+---
+- name: Lab 12. selinux-issues
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install httpd
+      dnf: state=present name=httpd
+
+    - name: Enable firewall rule
+      ansible.posix.firewalld:
+        state: enabled
+        service: http
+        zone: public
+        permanent: true
+        immediate: true
+
+    - name: Add /custom directory in httpd config
+      lineinfile:
+        state: present
+        path: /etc/httpd/conf/httpd.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: 'DocumentRoot "/var/www/html"', line: 'DocumentRoot "/custom"' }
+        - { regexp: '<Directory "/var/www/html">', line: '<Directory "/custom">' }
+
+    - name: Create /custom directory
+      file: state=directory path=/custom
+
+    - name: Create index.html
+      lineinfile: 
+        state: present
+        path: /custom/index.html
+        create: true
+        line: "This is SERVERA."
+
+    - name: Start httpd service
+      service: state=started enabled=true name=httpd
