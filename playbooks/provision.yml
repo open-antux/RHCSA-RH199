@@ -45,9 +45,9 @@
       blockinfile:
         path: /etc/hosts
         block: |
-          172.25.250.9   student.mydomain.com  workstation
-          172.25.250.10  servera.mydomain.com  servera
-          172.25.250.11  serverb.mydomain.com  serverb
+          172.25.250.9   workstation.lab.example.com  workstation
+          172.25.250.10  servera.lab.example.com  servera
+          172.25.250.11  serverb.lab.example.com  serverb
         marker: ""
 
     - name: Add sudo permission to student
