@@ -1,0 +1,17 @@
+---
+- name: End lab 10. 10-selinux-filecontexts
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove httpd
+      dnf: state=absent name=httpd
+
+    - name: Remove /custom
+      file: path=/custom state=absent
+
+    - name: Remove context
+      community.general.sefcontext:
+        target: /custom(/.*)?
+        state: absent

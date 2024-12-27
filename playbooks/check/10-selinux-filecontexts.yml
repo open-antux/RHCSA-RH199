@@ -1,0 +1,49 @@
+---
+- name: Check lab 10. selinux-filecontexts
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get custom info
+      stat: path=/custom
+      register: custom_dir
+
+    - name: Get custom info
+      stat: path=/custom/index.html
+      register: index_file
+
+    - name: Get all fcontext
+      command: "semanage fcontext --list"
+      register: fcontext_list
+
+    - name: Get index.html content
+      command: "curl servera.mydomain.com/index.html"
+      delegate_to: workstation
+      register: index_content
+
+    - name: Assert /custom exists
+      assert: 
+        that:
+          - "custom_dir.stat.exists"
+          - "index_file.stat.exists"
+        fail_msg: "LAB FAILED: /custom doesn't exists or index.html doesn't exist"
+        quiet: true
+
+    - name: Assert index.html connection
+      assert: 
+        that:
+          - "index_content.stdout == 'This is SERVERA.'"
+        fail_msg: "LAB FAILED: Content on /content/index.html is incorrect or error on connection"
+        quiet: true
+    
+    - name: Assert selinux content
+      assert:
+        that:
+          - "custom_rule == 'httpd_sys_content_t'"
+        fail_msg: "LAB FAILED: Context not setted correctly"
+        quiet: true
+      vars:
+        custom_rule: "{{ (fcontext_list.stdout | regex_search('\n/custom.*', multiline=true) | split | last | split(':'))[2] }}"
+        
+
