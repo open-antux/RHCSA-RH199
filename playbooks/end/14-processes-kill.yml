@@ -1,0 +1,10 @@
+---
+- name: End lab 14. processes-kill
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove bin directory
+      file: state=absent path={{ item }}
+      loop: ['/home/student/bin', '/home/student/instance_outfile']

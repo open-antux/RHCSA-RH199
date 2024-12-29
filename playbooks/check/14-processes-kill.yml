@@ -1,0 +1,22 @@
+---
+- name: Check lab. 14 processes-kill
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  tasks:
+    - name: Get all processes
+      command: "ps -a"
+      register: processes
+
+    - name: Assert processes
+      assert:
+        that:
+          - "instance == '0'"
+          - "tail == '0'"
+        fail_msg: "LAB FAILED: instance or tail processes still exists"
+        quiet: true
+      vars:
+        instance: "{{ processes.stdout_lines | select('match', '.*instance.*') | length }}"
+        tail: "{{ processes.stdout_lines | select('match', '.*tail.*') | length }}"
