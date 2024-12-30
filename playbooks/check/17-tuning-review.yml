@@ -1,0 +1,29 @@
+---
+- name: Check Lab 17. tuning-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get tuned configuration
+      command: "tuned-adm active"
+      register: tuned_active
+
+    - name: Get all processes
+      command: "ps ax -o nice,args"
+      register: processes
+
+    - name: Assert tuned profile
+      assert: 
+        that:
+          - "(tuned_active.stdout | split | last) == 'balanced'"
+        fail_msg: "LAB FAILED: tuned profile is wrong"
+        quiet: true
+
+    - name: Assert processes
+      assert: 
+        that:
+          - "(processes.stdout | regex_search('.*sha1sum.*', multiline=true) | split | first) == '10'"
+          - "(processes.stdout | regex_search('.*md5sum.*', multiline=true) | split | first) == '10'"
+        fail_msg: "LAB FAILED: nice is wrong on one or both processes"
+        quiet: true

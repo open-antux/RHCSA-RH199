@@ -1,0 +1,16 @@
+---
+- name: End Lab 17. tuning-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get tuned configuration
+      command: "tuned-adm auto_profile"
+      register: tuned_active
+
+    - name: Get all processes
+      command: "pkill {{ item }}"
+      loop:
+        - sha1sum
+        - md5sum

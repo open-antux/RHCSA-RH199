@@ -1,0 +1,12 @@
+---
+- name: Lab 17. tuning-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Execute two high processes
+      shell: "nohup nice -n {{ item.nice }} {{ item.comm }} /dev/zero >/dev/null &"
+      loop: 
+        - { comm: "sha1sum", nice: 2}
+        - { comm: "md5sum", nice: -2}
