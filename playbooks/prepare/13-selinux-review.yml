@@ -1,5 +1,5 @@
 ---
-- name: Lab 13. selinux-review
+- name: PREPARE 13-selinux-review
   hosts: serverb
   gather_facts: false
   become: true

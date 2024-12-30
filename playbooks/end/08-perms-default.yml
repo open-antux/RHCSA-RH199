@@ -1,5 +1,5 @@
 ---
-- name: End Lab 8. perms-default
+- name: END 08-perms-default
   hosts: servera
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: End lab. 16 tuning-profiles
+- name: END 16-tuning-profiles
   hosts: servera
   gather_facts: false
   become: true

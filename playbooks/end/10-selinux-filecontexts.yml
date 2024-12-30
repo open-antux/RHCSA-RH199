@@ -1,5 +1,5 @@
 ---
-- name: End lab 10. 10-selinux-filecontexts
+- name: END 10-selinux-filecontexts
   hosts: servera
   gather_facts: false
   become: true

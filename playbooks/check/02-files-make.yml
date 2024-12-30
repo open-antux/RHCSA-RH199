@@ -1,5 +1,5 @@
 ---
-- name: Check Lab 2. files-make
+- name: CHECK 02-files-make
   hosts: servera
   gather_facts: false
   become: true

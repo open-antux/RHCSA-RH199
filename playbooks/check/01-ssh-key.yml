@@ -1,5 +1,5 @@
 ---
-- name: Check lab 1 SSH key
+- name: CHECK 01-ssh-key
   hosts: servera,serverb
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: End lab 14. processes-kill
+- name: END 14-processes-kill
   hosts: servera
   gather_facts: false
   become: true

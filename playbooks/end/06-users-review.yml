@@ -1,5 +1,5 @@
 ---
-- name: End lab 6. users-review
+- name: END 06-users-review
   hosts: serverb
   gather_facts: false
   become: true

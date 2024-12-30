@@ -1,5 +1,5 @@
 ---
-- name: Check lab. 16 tuning-profiles
+- name: CHECK 16-tuning-profiles
   hosts: servera
   gather_facts: false
   become: true

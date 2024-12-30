@@ -1,5 +1,5 @@
 ---
-- name: Check Lab 17. tuning-review
+- name: CHECK 17-tuning-review
   hosts: serverb
   gather_facts: false
   become: true

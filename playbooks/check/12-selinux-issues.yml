@@ -1,5 +1,5 @@
 ---
-- name: Check lab. 12 selinux-issues
+- name: CHECK 12-selinux-issues
   hosts: servera
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: Lab 17. tuning-review
+- name: PREPARE 17-tuning-review
   hosts: serverb
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: Check lab 11. selinux-booleans
+- name: CHECK 11-selinux-booleans
   hosts: servera
   gather_facts: false
 

@@ -1,5 +1,5 @@
 ---
-- name: End lab 7. perms-cli
+- name: END 07-perms-cli
   hosts: servera
   gather_facts: false
   become: true

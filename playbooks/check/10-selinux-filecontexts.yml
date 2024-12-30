@@ -1,5 +1,5 @@
 ---
-- name: Check lab 10. selinux-filecontexts
+- name: CHECK 10-selinux-filecontexts
   hosts: servera
   gather_facts: false
   become: true

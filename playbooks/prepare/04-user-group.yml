@@ -1,5 +1,5 @@
 ---
-- name: Lab 4. users-group
+- name: PREPARE 04-user-group
   hosts: servera
   gather_facts: false
   become: true

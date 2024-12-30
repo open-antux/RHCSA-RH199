@@ -1,5 +1,5 @@
 ---
-- name: Lab 12. selinux-issues
+- name: PREPARE 12-selinux-issues
   hosts: servera
   gather_facts: false
   become: true

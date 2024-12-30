@@ -1,5 +1,5 @@
 ---
-- name: Check lab 3. files-review
+- name: CHECK 03-files-review
   hosts: servera
   gather_facts: false
   become: true

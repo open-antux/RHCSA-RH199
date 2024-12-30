@@ -1,5 +1,5 @@
 ---
-- name: End 11. selinux-booleans
+- name: END 11-selinux-booleans
   hosts: servera
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: Check lab 7. perms-cli
+- name: CHECK 07-perms-cli
   hosts: servera
   gather_facts: false
   become: true

@@ -1,5 +1,5 @@
 ---
-- name: Check lab 13. selinux-review
+- name: CHECK 13-selinux-review
   hosts: serverb
   gather_facts: false
   become: true

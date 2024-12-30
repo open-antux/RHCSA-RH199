@@ -1,5 +1,5 @@
 ---
-- name: Prepare lab. 1 SSH key
+- name: END 01-ssh-key
   hosts: servera,serverb
   gather_facts: false
   become: true

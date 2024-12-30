@@ -1,5 +1,5 @@
 ---
-- name: End lab. 15 processes-monitor
+- name: END 15-processes-monitor
   hosts: servera
   gather_facts: false
   become: true

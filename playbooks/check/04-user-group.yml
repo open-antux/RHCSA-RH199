@@ -1,5 +1,5 @@
 ---
-- name: Check Lab 4. users-group
+- name: CHECK 04-user-group
   hosts: servera
   gather_facts: false
   become: true

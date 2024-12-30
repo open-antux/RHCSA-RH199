@@ -1,5 +1,5 @@
 ---
-- name: Check lab. 15 processes-monitor
+- name: CHECK 15-processes-monitor
   hosts: servera
   gather_facts: false
   become: true

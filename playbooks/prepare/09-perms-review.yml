@@ -1,5 +1,5 @@
 ---
-- name: Lab 9. perms-review
+- name: PREPARE 09-perms-review
   hosts: serverb
   gather_facts: false
   become: true

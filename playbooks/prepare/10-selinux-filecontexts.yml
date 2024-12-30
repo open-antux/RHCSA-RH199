@@ -1,5 +1,5 @@
 ---
-- name: Lab 10. selinux-filecontexts
+- name: PREPARE 10-selinux-filecontexts
   hosts: servera
   gather_facts: false
   become: true

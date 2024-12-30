@@ -1,5 +1,5 @@
 ---
-- name: Check lab 9. perms-review
+- name: CHECK 09-perms-review
   hosts: serverb
   gather_facts: false
   become: true
