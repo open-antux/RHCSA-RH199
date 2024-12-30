@@ -1,0 +1,34 @@
+---
+- name: Check lab. 16 tuning-profiles
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get packages
+      package_facts:
+
+    - name: Get services
+      service_facts:
+
+    - name: Get tuned configuration
+      command: "tuned-adm active"
+      register: tuned_active
+
+    - name: Assert checks
+      assert:
+        that: 
+          - "(ansible_facts.packages['tuned'] | length) != '0'"
+          - "(ansible_facts.services['tuned.service'].status) == 'enabled'"
+          - "(ansible_facts.services['tuned.service'].state) == 'running'"
+        fail_msg: "LAB FAILED: tuned not installed or service not enabled and started"
+        quiet: true
+
+    - name: Assert active tune profile
+      assert:
+        that:
+          - "active == 'throughput-performance'"
+        fail_msg: "LAB FAILED: wrong tuned profile"
+        quiet: true
+      vars:
+        active: "{{ tuned_active.stdout | split | last }}"
