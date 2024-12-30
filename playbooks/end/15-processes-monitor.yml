@@ -1,0 +1,9 @@
+---
+- name: End lab. 15 processes-monitor
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove bin directory
+      file: state=absent path=/home/student/bin
