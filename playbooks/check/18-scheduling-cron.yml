@@ -1,0 +1,24 @@
+---
+- name: CHECK 18-scheduling-cron
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  tasks:
+    - name: Check if file exists
+      stat: path=/home/student/my_first_cron_job.txt
+      register: cron_file
+
+    - name: Check content of cron
+      command: "crontab -l"
+      register: cron_content
+      ignore_errors: true
+
+    - name: Assert file exists and cron configuration
+      assert:
+        that:
+          - "cron_file.stat.exists"
+          - "cron_content.stderr == 'no crontab for student'"
+        fail_msg: "LAB FAILED: File doesn't exists or crontab don't removed"
+        quiet: true

@@ -1,0 +1,14 @@
+---
+- name: END 18-scheduling-cron
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: student
+
+  tasks:
+    - name: Remove the file
+      file: state=absent path=/home/student/my_first_cron_job.txt
+
+    - name: Remove crontab content
+      command: "crontab -r"
+      ignore_errors: true
