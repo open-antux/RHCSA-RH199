@@ -1,0 +1,17 @@
+---
+- name: END 19-scheduling-system
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get file in /etc/cron.daily
+      find: path=/etc/cron.daily recurse=true
+      register: cron_daily_files
+
+    - name: Remove files in /etc/cron.daily
+      file: state=absent path={{ item }}
+      loop: "{{ cron_daily_files.files | map(attribute='path') }}"
+
+    - name: Remove timer
+      file: state=absent path=/etc/systemd/system/sysstat-collect.timer

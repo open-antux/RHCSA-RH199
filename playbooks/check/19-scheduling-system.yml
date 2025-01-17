@@ -1,0 +1,51 @@
+---
+- name: CHECK 19-scheduling-system
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get all the packages installed
+      package_facts:
+
+    - name: Get existing files in cron.daily
+      find: path=/etc/cron.daily recurse=true
+      register: cron_daily
+
+    - name: Get sysstat-collect.timer stat
+      stat: path=/etc/systemd/system/sysstat-collect.timer 
+      register: sysstat_collect
+
+    - name: Get all services
+      service_facts:
+
+    - name: Get sysstat-collect.timer service
+      systemd: name=sysstat-collect.timer
+      register: sysstat_timer_service
+
+    - name: Assert if the package is installed
+      assert:
+        that:
+          - "(ansible_facts.packages['sysstat'] | length) != 0"
+        fail_msg: "LAB FAILED: sysstat not installed"
+        quiet: true
+
+    - name: Assert files in cron.daily
+      assert:
+        that:
+          - "cron_daily.matched != 0"
+          - "(ansible_facts.services['crond.service'] | length) != 0"
+          - "ansible_facts.services['crond.service'].state == 'running'"
+          - "ansible_facts.services['crond.service'].status == 'enabled'"
+        fail_msg: "LAB FAILED: Not file configured in cron.daily directory or cronie-anacron not installed or crond service not enabled or started"
+        quiet: true
+
+    - name: Assert sysstat-collect.timer
+      assert:
+        that: 
+          - "sysstat_collect.stat.exists"
+          - "sysstat_timer_service.status.LoadState == 'loaded'"
+          - "sysstat_timer_service.status.SubState == 'running' or sysstat_timer_service.status.SubState == 'waiting'"
+          - "sysstat_timer_service.status.UnitFileState == 'enabled'"
+        fail_msg: "LAB FAILED: sysstat package is not installed or sysstat-collect.timer not configured or sysstat-collect.timer not enable or started"
+        quiet: true
