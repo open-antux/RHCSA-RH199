@@ -1,0 +1,33 @@
+---
+- name: CHECK 20-scheduling-tempfiles
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get file in tmpfiles.d
+      find: path=/etc/tmpfiles.d recurse=true
+      register: tmpfiles
+
+    - name: Get stat /run/momentary
+      stat: path=/run/momentary
+      register: momentary
+
+    - name: Get stat /run/momentary
+      find: path=/run/momentary/ recurse=true
+      register: momentary_files
+
+    - name: Assert tmpfiles configuration
+      assert:
+        that:
+          - "(tmpfiles.files | map(attribute='path') | sort) == ['/etc/tmpfiles.d/momentary.conf','/etc/tmpfiles.d/tmp.conf']"
+        fail_msg: "LAB FAILED: tmpfiles not configured"
+        quiet: true
+
+    - name: Assert momentary files
+      assert:
+        that:
+          - "momentary.stat.exists"
+          - "momentary_files.matched == 0"
+        fail_msg: "LAB FAILED: /run/momentary doesn't exists or not cleaned"
+        quiet: true

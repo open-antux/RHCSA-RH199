@@ -1,0 +1,15 @@
+---
+- name: END 20-scheduling-tempfiles
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get file in tmpfiles.d
+      find: path=/etc/tmpfiles.d recurse=true
+      register: tmpfiles
+  
+    - name: Remove files and directory
+      file: state=absent path={{ item }}
+      loop: "{{ (tmpfiles.files | map(attribute='path') | list) + ['/run/momentary'] }}"
+
