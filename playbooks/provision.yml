@@ -41,6 +41,10 @@
         mode: 0600
         remote_src: true
 
+    - name: Set root password
+      user: name=root password=$1$ddpxvIQF$lgf/RQKN7.12NqkE6p4I9. # redhat
+
+
     - name: Add hosts in hosts file 
       blockinfile:
         path: /etc/hosts
