@@ -1,0 +1,33 @@
+---
+- name: CHECK 21-storage-partitions
+  hosts: servera
+  become: true
+
+  tasks:
+    - name: Get parted print output
+      command: "parted /dev/vdb print"
+      register: parted_output
+
+    - name: Assert parted output
+      assert:
+        that:
+          - "last_line[1] == '1049kB'"
+          - "last_line[2] == '1001MB'"
+          - "last_line[3] == '1000MB'"
+          - "last_line[5] == 'xfs'"
+        fail_msg: "ERROR: Partition made wrong"
+        quiet: true
+      vars:
+        last_line: "{{ parted_output.stdout_lines[-1] | split }}"
+
+    - name: Assert mount
+      assert: 
+        that:
+          - "mount.mount == '/archive'"
+          - "mount.inode_used == 3"
+          - "mount.device == '/dev/vdb1'"
+          - "mount.fstype == 'xfs'"
+        fail_msg: "ERROR: Mounted wrong"
+        quiet: true
+      vars:
+        mount: "{{ ansible_facts.mounts | selectattr('mount', 'match', '.*archive.*') | first }}"
