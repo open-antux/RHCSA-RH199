@@ -1,0 +1,24 @@
+# Run vagrant in this way:
+# ```shell
+# $ HOST='<host>' vagrant up
+# ```
+# 
+# To remove the disk:
+# ```shell
+# $ vagrant destroy -f && vagrant up
+# ```
+---
+- name: PREPARE 18-fs-mount
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Make partition vdb1
+      community.general.parted:
+        state: present
+        device: /dev/vdb
+        number: 1
+
+    - name: Make fs
+      command: "mkfs.xfs -f /dev/vdb1"

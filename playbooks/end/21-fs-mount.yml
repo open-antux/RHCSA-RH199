@@ -1,0 +1,9 @@
+---
+- name: END 18-fs-mount
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove partition vdb1
+      community.general.parted: state=absent device=/dev/vdb number=1
