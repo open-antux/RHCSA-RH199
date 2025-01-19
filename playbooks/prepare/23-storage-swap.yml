@@ -1,0 +1,12 @@
+---
+- name: PREPARE 23-storage-swap
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Make /dev/vdb labled in gpt
+      command: "parted /dev/vdb mklabel gpt"
+
+    - name: Create new partition
+      command: "parted /dev/vdb mkpart data 1049kB 1001MB"

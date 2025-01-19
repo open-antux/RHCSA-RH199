@@ -1,0 +1,36 @@
+---
+- name: CHECK 23-storage-swap
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get lsblk output
+      command: "lsblk -fp /dev/vdb"
+      register: lsblk_output
+
+    - name: Get swapon output
+      command: "swapon --show"
+      register: swapon_output
+
+    - name: Assert lsblk output
+      assert: 
+        that:
+          - "vdb1_length == '1'"
+          - "vdb2_line[1] == 'swap'"
+          - "vdb2_line[4] == '[SWAP]'"
+        fail_msg: "ERROR: Partition doesn't created correctly"
+        quiet: true
+      vars:
+        vdb1_length: "{{ lsblk_output.stdout_lines[-2] | split | length }}"
+        vdb2_line: "{{ lsblk_output.stdout_lines[-1] | split }}"
+
+    - name: Assert swapon
+      assert:
+        that:
+          - "last_line[0] == '/dev/vdb2'"
+          - "last_line[2] == '476M'"
+        fail_msg: "ERROR: Swap doesn't created correctly"
+        quiet: true
+      vars: 
+        last_line: "{{ swapon_output.stdout_lines[-1] | split }}"
