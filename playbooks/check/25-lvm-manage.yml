@@ -1,0 +1,63 @@
+---
+- name: CHECK 25-lvm-manage
+  hosts: servera
+  gather_facts: false
+  become: true
+  ignore_errors: true
+
+  pre_tasks:
+    - name: Reboot
+      reboot:
+
+    - name: Get mounts
+      setup: filter=ansible_mounts
+
+  tasks:
+    - name: Get table partition
+      community.general.parted: state=info device=/dev/vdb unit=MiB
+      register: parted_output
+
+    - name: Get pvs
+      command: "pvs /dev/vdb1 /dev/vdb2 /dev/vdb3"
+      register: pvs_output
+
+    - name: Get vgs
+      command: "vgs servera_group"
+      register: vgs_output
+
+    - name: Get lvs
+      command: "lvs servera_group"
+      register: lvs_output
+
+    - name: Assert table partition
+      assert:
+        that:
+          - "parted_output.disk.table == 'gpt'"
+          - "first.size == 255 and first.flags[0] == 'lvm'"
+          - "second.size == 256 and second.flags[0] == 'lvm'"
+          - "third.size == 512 and third.flags[0] == 'lvm'"
+        fail_msg: "ERRORE: Table partition created wrongly"
+        quiet: true
+      vars:
+        first: "{{ parted_output.partitions | selectattr('name', 'match', 'first') | first }}"
+        second: "{{ parted_output.partitions | selectattr('name', 'match', 'second') | first }}"
+        third: "{{ parted_output.partitions | selectattr('name', 'match', 'third') | first }}"
+
+    - name: Assert LVM
+      assert: 
+        that: 
+          - "pvs_output.stderr == ''"
+          - "vgs_output.stderr == ''"
+          - "lvs_output.stderr == '' and (lvs_output.stdout_lines[-1] | split)[0] == 'servera_volume'"
+        fail_msg: "ERROR: PV, VG or LV created wrongly"
+        quiet: true
+
+    - name: Assert mount
+      assert: 
+        that:
+          - "data.device == '/dev/mapper/servera_group-servera_volume'"
+          - "data.fstype == 'xfs'"
+        fail_msg: "ERROR: /data created or mounted wrongly"
+        quiet: true
+      vars:
+        data: "{{ ansible_facts.mounts | selectattr('mount', 'match', '/data') | first }}"
