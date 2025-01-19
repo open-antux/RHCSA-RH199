@@ -1,0 +1,51 @@
+---
+- name: CHECK 24-storage-review
+  hosts: serverb
+  become: true
+
+  tasks:
+    - name: Reboot server
+      reboot:
+
+    - name: Get partition table info
+      community.general.parted: state=info device=/dev/vdb unit=MB
+      register: partition_table
+
+    - name: Get swap partition
+      command: "swapon --show"
+      register: swapon_output
+
+    - name: Assert partition table
+      assert:
+        that:
+          - "partition_table.disk.table == 'gpt'"
+          - "(backup.fstype == 'xfs') and (backup.size > 1800 or backup.size < 2200)"
+          - "(swap1.fstype == 'linux-swap(v1)') and (swap1.size > 460 or swap1.size < 564)"
+          - "(swap2.fstype == 'linux-swap(v1)') and (swap2.size > 460 or swap2.size < 564)"
+        fail_msg: "ERROR: Wrong partition table"
+        quiet: true
+      vars:
+        backup: "{{ partition_table.partitions | selectattr('name', 'match', 'backup') | first }}"
+        swap1: "{{ partition_table.partitions | selectattr('name', 'match', 'swap1') | first }}"
+        swap2: "{{ partition_table.partitions | selectattr('name', 'match', 'swap2') | first }}"
+
+    - name: Assert swaps
+      assert:
+        that:
+          - "{{ true if (penultimateline[0] == '/dev/vdb2' and (penultimateline[4] | int) < (lastline[4] | int)) else false }}"
+        fail_msg: "ERROR: Swap created wrong"
+        quiet: true
+      vars:
+        penultimateline: "{{ swapon_output.stdout_lines[-2] | split }}"
+        lastline: "{{ swapon_output.stdout_lines[-1] | split }}"
+
+    - name: Assert mounts
+      assert:
+        that:
+          - "backup.device == '/dev/vdb1'"
+          - "backup.fstype == 'xfs'"
+          - "backup.mount == '/backup'"
+        fail_msg: "ERROR: backup disk not created or mounted correctly"
+        quiet: true
+      vars:
+        backup: "{{ ansible_facts.mounts | selectattr('mount', 'match', '/backup') | first }}"
