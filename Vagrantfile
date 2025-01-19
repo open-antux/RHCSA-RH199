@@ -23,10 +23,17 @@ Vagrant.configure("2") do |config|
       config.vm.network :private_network, ip: opts[:ip]
 
       if ENV['HOST'] == opts[:name]
-        size = ENV['SIZE'] ? ENV['SIZE'] : '5G'
-
         config.vm.provider :libvirt do |libvirt|
-          libvirt.storage :file, :size => size
+          size = ENV['SIZE'] ? ENV['SIZE'] : '5G'
+
+          if ENV['EXERCISE'] == 'storage-review'
+            libvirt.storage :file, :size => size
+            libvirt.storage :file, :size => size
+            libvirt.storage :file, :size => size
+          else
+            libvirt.storage :file, :size => size
+          end
+
         end
       end
 
