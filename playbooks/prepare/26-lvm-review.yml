@@ -1,0 +1,38 @@
+---
+- name: PREPARE 26-lvm-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Create a new partition
+      community.general.parted:
+        state: present
+        device: /dev/vdb
+        label: gpt
+        number: 1
+        name: serverb01
+        part_end: 512MiB
+        flags: lvm
+
+    - name: Create pv
+      command: "pvcreate /dev/vdb1"
+
+    - name: Create vg
+      community.general.lvg: state=present vg=serverb_01_vg pvs=/dev/vdb1 
+
+    - name: Create lv
+      community.general.lvol: state=present vg=serverb_01_vg lv=serverb_01_lv size=+100%FREE
+    
+    - name: Create fs
+      community.general.filesystem: dev=/dev/serverb_01_vg/serverb_01_lv fstype=xfs
+
+    - name: Create mountpoint
+      file: state=directory path=/storage/data1 recurse=true
+
+    - name: Mount fs
+      mount: 
+        state: mounted
+        src: /dev/serverb_01_vg/serverb_01_lv 
+        path: /storage/data1
+        fstype: xfs

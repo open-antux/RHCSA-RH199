@@ -1,0 +1,50 @@
+---
+- name: CHECK 26-lvm-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  pre_tasks:
+    - name: Reboot
+      reboot:
+
+    - name: Get ansible_mounts
+      setup: filter=ansible_mounts
+
+  tasks:
+    - name: Get partition table
+      community.general.parted: state=info device=/dev/vdb unit=MiB
+      register: parted_output
+
+    - name: Get lvs output
+      command: "lvs serverb_01_vg"
+      register: lvs_output
+
+    - name: Assert partition table
+      assert:
+        that: 
+          - "parted_output.disk.table == 'gpt'"
+          - "(parted_output.partitions | length) == 2"
+          - "other_partition.size == 512 and other_partition.flags[0] == 'lvm'"
+        fail_msg: "ERROR: Table partition wrong"
+        quiet: true
+      vars: 
+        other_partition: "{{ parted_output.partitions | rejectattr('name', 'match', 'serverb01$') | first }}"
+      
+    - name: Assert lvs
+      assert: 
+        that:
+          - "(lvs_output.stdout_lines | select('search', 'serverb_01_lv.*') | first | split)[3] == '768.00m'"
+          - "(lvs_output.stdout_lines | select('search', 'serverb_02_lv.*') | first | split)[3] == '128.00m'"
+        fail_msg: "ERROR: Logical volume created wrong"
+        quiet: true
+
+    - name: Assert mounts
+      assert:
+        that:
+          - "((data2.size_total / 1000000) | int) == 128"
+          - "data2.fstype == 'xfs'"
+        fail_msg: "ERROR: Created /storage/data2 wrongly"
+        quiet: true
+      vars:
+        data2: "{{ ansible_facts.mounts | selectattr('mount', 'match', '/storage/data2') | first }}"
