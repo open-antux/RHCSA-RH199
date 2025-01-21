@@ -1,0 +1,21 @@
+---
+- name: 32-logs-maintain
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get timedatectl
+      command: timedatectl
+      register: timedatectl
+
+    - name: Assert timedatectl
+      assert:
+        that:
+          - "timezone == ' America/Port-au-Prince (EST, -0500)'"
+          - "sys_clock_sync == ' yes'"
+        fail_msg: "ERROR: timezone or ntp setted wrongly"
+        quiet: true
+      vars: 
+        timezone: "{{ timedatectl.stdout_lines | select('search', 'Time zone.*') | first | split(':') | last }}"
+        sys_clock_sync: "{{ timedatectl.stdout_lines | select('search', 'System clock synchronized.*') | first | split(':') | last }}"

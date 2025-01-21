@@ -1,0 +1,9 @@
+---
+- name: END 32-logs-review
+  hosts: servera
+  gather_fatcs: false
+  become: true
+
+  tasks:
+    - name: Reset timezone
+      command: "timedatectl set-timezone UTC"
