@@ -1,0 +1,29 @@
+---
+- name: CHECK 30-boot-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Check password
+      shell: "echo 'redhat' | su -"
+      register: password_output
+      become_user: student
+
+    - name: Get default target
+      stat: path=/etc/systemd/system/default.target
+      register: default_target
+
+    - name: Assert password
+      assert:
+        that:
+          - "'Authentication failure' not in password_output.stderr"
+        fail_msg: "ERROR: Password not setted correctly"
+        quiet: true
+
+    - name: Assert default-target
+      assert:
+        that:
+          - "default_target.stat.lnk_target == '/usr/lib/systemd/system/graphical.target'"
+        fail_msg: "ERROR: Default target incorrect"
+        quiet: true

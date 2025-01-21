@@ -1,0 +1,16 @@
+---
+- name: PREPARE 30-boot-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Reset root password
+      user: name=root password='$1$/qe4qxox$mbsXe2NVNjO5cc5O/gDY41'
+
+    - name: Adding fake mount
+      lineinfile: state=present path=/etc/fstab line='UUID=4d5c85a5-8921-4a06-8aff-80567e9689bc /olddata xfs defaults 0 0'
+
+    - name: Reboot
+      reboot:
+        reboot_timeout: 0

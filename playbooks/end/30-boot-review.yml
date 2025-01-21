@@ -1,0 +1,15 @@
+---
+- name: END 30-boot-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove /olddata from fstab
+      lineinfile: state=absent path=/etc/fstab regexp='.*/olddata.*'
+
+    - name: Set multi-user.target as default
+      file: 
+        src: /usr/lib/systemd/system/multi-user.target
+        dest: /etc/systemd/system/default.target
+        state: link
