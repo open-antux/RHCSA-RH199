@@ -1,0 +1,20 @@
+---
+- name: END 32-logs-preserve
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Restore journald config
+      lineinfile: 
+        path: /etc/systemd/journald.conf
+        regexp: '^Storage=persist.*'
+        line: '#Storage=auto'
+
+    - name: Restart journald
+      service: state=restarted name=systemd-journald.service
+
+    - name: Remove persistent journal logs
+      file: state=absent path=/var/log/journal
+      
+    

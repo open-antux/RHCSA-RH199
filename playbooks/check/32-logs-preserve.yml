@@ -1,0 +1,30 @@
+---
+- name: 32-logs-preserve
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get journald config
+      slurp: src=/etc/systemd/journald.conf
+      register: journald_config
+
+    - name: Get /var/log/journal
+      find: paths=/var/log/journal recurse=yes
+      register: journal_logs
+
+    - name: Assert config
+      assert: 
+        that:
+          - "(journald_config.content | b64decode | regex_search('^Storage=persistent.*', multiline=True)) != ''"
+        fail_msg: "ERROR: File config not configured properly"
+        quiet: true
+
+    - name: Assert journal log
+      assert:
+        that:
+          - "journal_logs.examined != 0"
+        fail_msg: "ERROR: No journal log persisted"
+        quiet: true
+
+
