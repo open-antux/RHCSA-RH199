@@ -1,0 +1,17 @@
+---
+- name: CHECK 27-boot-selecting
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get default target name
+      stat: path=/etc/systemd/system/default.target
+      register: target
+
+    - name: Assert target
+      assert:
+        that:
+          - "target.stat.lnk_target == '/usr/lib/systemd/system/multi-user.target'"
+        fail_msg: "ERROR: Default target is not multi-user.target"
+        quiet: true

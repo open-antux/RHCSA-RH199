@@ -1,0 +1,23 @@
+---
+- name: PREPARE 27-boot-selecting
+  hosts: workstation
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Set graphical as default target
+      file:
+        src: /usr/lib/systemd/system/graphical.target
+        dest: /etc/systemd/system/default.target
+        state: link
+      
+    - name: Reboot
+      reboot:
+
+    - name: Edit / permissions
+      mount:
+        path: /
+        src: /dev/mapper/rl_rocky9-root
+        fstype: xfs
+        opts: defaults,ro
+        state: present
