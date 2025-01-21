@@ -1,0 +1,28 @@
+---
+- name: CHECK 31-logs-syslog
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get rsyslog config
+      slurp: src=/etc/rsyslog.d/debug.conf
+      register: debug_conf
+
+    - name: Get log in /var/log/messages-debug
+      slurp: src=/var/log/messages-debug
+      register: messages_debug
+
+    - name: Assert config file
+      assert:
+        that:
+          - "(debug_conf.content | b64decode | split) == ['*.debug', '/var/log/messages-debug']"
+        fail_msg: "ERROR: Rsyslog configured wrongly"
+        quiet: true
+
+    - name: Assert messages-debug
+      assert:
+        that:
+          - "(messages_debug.content | b64decode | split) != ''"
+        fail_msg: "ERROR: rsyslog is not logging"
+        quiet: true
