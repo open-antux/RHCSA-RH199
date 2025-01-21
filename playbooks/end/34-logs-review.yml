@@ -1,0 +1,18 @@
+---
+- name: END 34-logs-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Restore timedatectl config
+      command: "timedatectl set-timezone UTC"
+
+    - name: Remove rsyslog config
+      file: state=absent path=/etc/rsyslog.d/auth-errors.conf
+
+    - name: Restart rsyslog
+      service: state=restarted name=rsyslog.service
+
+    - name: Remove auth-errors log 
+      file: state=absent path=/var/log/auth-errors

@@ -1,0 +1,42 @@
+---
+- name: END 34-logs-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get timedatectl
+      command: timedatectl
+      register: timedatectl
+
+    - name: Get auth-errors.conf rsyslog
+      slurp: path=/etc/rsyslog.d/auth-errors.conf
+      register: auth_errors_config
+
+    - name: Get auth-errors logs
+      slurp: path=/var/log/auth-errors
+      register: auth_errors_logs
+
+    - name: Assert timedatectl
+      assert:
+        that:
+          - "timezone == ' America/Jamaica (EST, -0500)'"
+        fail_msg: "ERROR: timezone or ntp setted wrongly"
+        quiet: true
+      vars: 
+        timezone: "{{ timedatectl.stdout_lines | select('search', 'Time zone.*') | first | split(':') | last }}"
+
+    - name: Assert auth-errors config
+      assert:
+        that:
+          - "(auth_errors_config.content | b64decode | split) == ['authpriv.alert', '/var/log/auth-errors']"
+        fail_msg: "ERROR: Not config auth-errors"
+        quiet: true
+
+    - name: Assert auth-errors logs
+      assert:
+        that:
+          - "(auth_errors_logs.content | b64decode | regex_search('.*Logging test authpriv.alert', multiline=True)) != ''"
+        fail_msg: "ERROR: Not contain test log"
+        quiet: true
+
