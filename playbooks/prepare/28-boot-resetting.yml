@@ -1,0 +1,9 @@
+---
+- name: PREPARE 28-boot-selecting
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Reset root password
+      user: name=root password='$1$/qe4qxox$mbsXe2NVNjO5cc5O/gDY41'

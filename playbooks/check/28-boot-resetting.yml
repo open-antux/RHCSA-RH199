@@ -1,0 +1,9 @@
+---
+- name: CHECK 28-boot-resetting
+  hosts: workstation
+  gather_facts: false
+
+  tasks:
+    - name: Try password
+      shell: "echo 'redhat' | su -"
+      register: password
