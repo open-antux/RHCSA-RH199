@@ -1,0 +1,10 @@
+---
+- name: PREPARE 29-boot-repairing
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Add fake path
+      lineinfile: state=absent path=/etc/fstab regexp='.*RemoveMe.*'
+

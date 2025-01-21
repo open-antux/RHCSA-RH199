@@ -1,0 +1,26 @@
+---
+- name: PREPARE 29-boot-repairing
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Edit / permissions
+      mount:
+        path: /
+        src: /dev/mapper/rl_rocky9-root
+        fstype: xfs
+        opts: defaults,ro
+        state: present
+
+    - name: Add fake path
+      mount:
+        path: /RemoveMe
+        src: /dev/sdz
+        fstype: xfs
+        opts: defaults
+        state: present
+
+    - name: Reboot
+      reboot:
+        reboot_timeout: 0
