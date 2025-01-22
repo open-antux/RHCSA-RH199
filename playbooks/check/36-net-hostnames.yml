@@ -1,0 +1,19 @@
+---
+- name: CHECK 36-net-hostnames
+  hosts: servera
+  become: true
+
+  tasks:
+    - name: Get /etc/hosts content
+      slurp: path=/etc/hosts
+      register: hosts_config
+
+    - name: Assert hostname and hosts file
+      assert:
+        that:
+          - "ansible_hostname == 'servera'"
+          - "classroom == [ansible_eth1.ipv4.address, 'classroom.lab.example.com', 'class']"
+        fail_msg: "ERROR: hostname or /etc/hosts not configured correctly"
+        quiet: true
+      vars:
+        classroom: "{{ hosts_config.content | b64decode | regex_search('.*classroom.*', multiline=True) | split }}"

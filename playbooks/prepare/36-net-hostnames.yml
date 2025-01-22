@@ -1,0 +1,9 @@
+---
+- name: PREPARE 36-net-hostnames
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Set different hostname
+      hostname: name=testa

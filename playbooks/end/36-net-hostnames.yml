@@ -1,0 +1,9 @@
+---
+- name: END 36-net-hostnames
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Restore /etc/hosts file
+      lineinfile: state=absent path=/etc/hosts regexp='.*classroom.*'
