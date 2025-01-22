@@ -1,0 +1,15 @@
+---
+- name: END 35-net-configure
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Restore System eth1 device
+      community.general.nmcli: state=present conn_name='System eth1' autoconnect=true
+
+    - name: Remove static-addr
+      community.general.nmcli: state=absent conn_name=static-addr
+
+    - name: Reboot
+      reboot:

@@ -1,0 +1,27 @@
+# REMINDER
+# This environment uses "System eth1" device to connect, in RH exercise uses
+# eth0. Also, the RH exercise has a gateway configured, in this environment
+# not.
+---
+- name: 35-net-ocnfigure
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get nmcli output
+      command: "nmcli c show --active"
+      register: nmcli
+
+    - name: Assert connection
+      assert:
+        that:
+          - "static_addr[0] == 'static-addr'"
+          - "static_addr[2] == 'ethernet'"
+          - "static_addr[3] == 'eth1'"
+          - "system_eth1 == ''"
+        fail_msg: 'ERROR: static-addr not configured properly or "System eth1" is up'
+        quiet: true
+      vars:
+        static_addr: "{{ nmcli.stdout | regex_search('^static-addr.*', multiline=True) | split }}"
+        system_eth1: "{{ nmcli.stdout | regex_search('^System eth1.*', multiline=True) }}"
