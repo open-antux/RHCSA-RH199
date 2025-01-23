@@ -1,0 +1,40 @@
+---
+- name: PREPARE 38-netsecurity-firewalls
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get all packages
+      package_facts:
+
+    - name: Get firewall rules
+      command: "firewall-cmd --info-zone=public"
+      register: firewall_public
+
+    - name: Get https content on workstation
+      command: "curl -k https://servera"
+      register: curl_workstation
+      delegate_to: workstation
+
+    - name: Assert packages
+      assert:
+        that:
+          - "(ansible_facts.packages['httpd'] | length) != 0"
+          - "(ansible_facts.packages['mod_ssl'] | length) != 0"
+        fail_msg: "ERROR: https or mod_ssl not installed"
+        quiet: true
+
+    - name: Assert firewall rules
+      assert: 
+        that: 
+          - "'https' in (firewall_public.stdout | regex_search('.*service.*', multiline=True))"
+        fail_msg: "ERROR: https protocol not in public firewall"
+        quiet: true
+
+    - name: Assert curl output
+      assert:
+        that: 
+          - "curl_workstation.stdout == 'I am servera.'"
+        fail_msg: "ERROR: curl output is different or is not reachable"
+        quiet: true
