@@ -1,0 +1,25 @@
+---
+- name: PREPARE 40-netsecurity-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Remove httpd
+      dnf: state=absent name=httpd
+
+    - name: Delete httpd directories
+      file: state=absent path={{ item }}
+      loop:
+        - /var/www/html
+        - /var/www2/html
+        - /etc/httpd
+
+    - name: Remove SELinux context
+      command: "semanage fcontext -D"
+
+    - name: Remove SELinux ports
+      command: "semanage port -D"
+
+    - name: Enable daemons_dump_core for SELinux
+      seboolean: name=daemons_dump_core state=false persistent=true

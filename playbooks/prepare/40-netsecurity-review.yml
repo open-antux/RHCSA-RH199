@@ -1,0 +1,81 @@
+---
+- name: PREPARE 40-netsecurity-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install httpd
+      dnf: state=present name=httpd
+
+    - name: Create httpd directories
+      file: state=directory path={{ item }}
+      loop:
+        - /var/www/html
+        - /var/www2/html
+
+    - name: Create index files
+      lineinfile: state=present path={{ item.path }} line={{ item.line }} create=true
+      loop:
+        - { path: /var/www/html/index.html, line: "SERVER B" }
+        - { path: /var/www2/html/index.html, line: "VHOST 1" }
+
+    - name: Adding 1001 port
+      lineinfile: 
+        state: present
+        path: /etc/httpd/conf/httpd.conf
+        insertafter: 'Listen 80'
+        line: 'Listen 1001'
+
+    - name: Find all useless config
+      find: path=/etc/httpd/conf.d/ recurse=true
+      register: find
+
+    - name: Delete useless config
+      file: state=absent path={{ item }}
+      loop: "{{ find.files | map(attribute='path') }}"
+
+    - name: Adding configuration on port 80
+      blockinfile:
+        state: present
+        path: /etc/httpd/conf.d/80-default.conf
+        create: true
+        block: |
+          <VirtualHost *:80>
+              ServerName serverb.lab.example.com
+              DocumentRoot /var/www/html
+              <Directory /var/www/html>
+                  Options Indexes FollowSymLinks
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+    
+    - name: Adding configuration on port 1001
+      blockinfile:
+        state: present
+        path: /etc/httpd/conf.d/1001-default.conf
+        create: true
+        block: |
+          <VirtualHost *:1001>
+              ServerName serverb.lab.example.com
+              DocumentRoot /var/www2/html
+              <Directory /var/www2/html>
+                  Options Indexes FollowSymLinks
+                  AllowOverride All
+                  Require all granted
+              </Directory>
+          </VirtualHost>
+
+    - name: Add SELinux context
+      command: "semanage fcontext -a -t httpd_sys_content_t '/var/www(.*/.*)'"
+
+    - name: Restore context
+      command: "restorecon -R /var/www2"
+
+    - name: Enable daemons_dump_core for SELinux
+      seboolean: name=daemons_dump_core state=true persistent=true
+
+    - name: Restart httpd service
+      service: state=restarted name=httpd
+      ignore_errors: true

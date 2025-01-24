@@ -1,0 +1,47 @@
+---
+- name: CHECK 40-netsecurity-review
+  hosts: serverb
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get semanage port rules
+      command: "semanage port -C -l"
+      register: se_http_port
+
+    - name: Get firewall rules
+      command: "firewall-cmd --info-zone=public"
+      register: firewall_public
+
+    - name: Get https content on workstation
+      command: "curl http://serverb"
+      register: curl_workstation_80
+      delegate_to: workstation
+
+    - name: Get https content on workstation
+      command: "curl http://serverb:1001"
+      register: curl_workstation_1001
+      delegate_to: workstation
+
+    - name: Assert SELinux ports
+      assert:
+        that:
+          - "(se_http_port.stdout_lines | last | split) == ['http_port_t', 'tcp', '1001']"
+        fail_msg: "ERROR: SELinux port doesn't setted correctly"
+        quiet: true
+
+    - name: Assert firewall rules
+      assert:
+        that:
+          - "'http' in (firewall_public.stdout | regex_search('.*services.*', multiline=True))"
+          - "'1001' in (firewall_public.stdout | regex_search('.*ports.*', multiline=True))"
+        fail_msg: "ERROR: ports doesn't setted correctly"
+        quiet: true
+
+    - name: Assert curl output
+      assert: 
+        that:
+          - "curl_workstation_80.stdout == 'SERVER B'"
+          - "curl_workstation_1001.stdout == 'VHOST 1'"
+        fail_msg: "ERROR: Can't reach serverb"
+        quiet: true
