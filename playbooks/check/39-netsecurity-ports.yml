@@ -1,0 +1,29 @@
+---
+- name: CHECK 39-netsecurity-ports
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Get semanage ports
+      command: "semanage port -C -l"
+      register: se_http_port
+
+    - name: Get curl
+      command: "curl http://servera:82"
+      register: curl_workstation
+      delegate_to: workstation
+
+    - name: Assert SELinux ports
+      assert:
+        that:
+          - "(se_http_port.stdout_lines | last | split) == ['http_port_t', 'tcp', '82']"
+        fail_msg: "ERROR: SELinux port doesn't setted correctly"
+        quiet: true
+
+    - name: Assert curl
+      assert:
+        that:
+          - "curl_workstation.stdout == 'Hello'"
+        fail_msg: "ERROR: curl doesn't get the correct output"
+        quiet: true

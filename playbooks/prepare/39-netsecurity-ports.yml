@@ -1,0 +1,30 @@
+---
+- name: PREPARE 39-netsecurity-ports
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install httpd 
+      dnf: state=present name=httpd
+
+    - name: Create path
+      file: state=directory recurse=true path=/var/www/html
+
+    - name: Create index.html
+      lineinfile:
+        state: present
+        path: /var/www/html/index.html
+        create: true
+        line: "Hello"
+
+    - name: Edit port
+      lineinfile:
+        state: present
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^Listen80$'
+        line: 'Listen 82'
+
+    - name: Restart httpd service
+      service: state=restarted enabled=true name=httpd
+      ignore_errors: true
