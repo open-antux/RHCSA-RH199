@@ -1,0 +1,31 @@
+# NOTE: Use registry.access.redhat.com registry to get images
+---
+- name: PREPARE 41-containers-lifecycle
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install podman
+      dnf: state=present name=podman
+
+    - name: Add user contsvc
+      user: state=present name=contsvc generate_ssh_key=true
+      register: user_info
+
+    - name: Get private ssh key file
+      slurp: path={{ user_info.ssh_key_file }}
+      register: ssh_private_key
+
+    - name: Create authorized_keys
+      authorized_key: user=contsvc state=present key={{ user_info.ssh_public_key }}
+
+    - name: Copy ssh private key to student home
+      lineinfile: 
+        path: /home/student/.ssh/id_contsvc
+        owner: student
+        group: student
+        mode: 0600
+        line: "{{ ssh_private_key.content | b64decode }}"
+        create: true
+      delegate_to: workstation

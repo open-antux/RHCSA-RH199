@@ -1,0 +1,34 @@
+---
+- name: CHECK 41-containers-lifecycle
+  hosts: servera
+  gather_facts: false
+  become: true
+  become_user: contsvc
+  
+  tasks:
+    - name: Get images info
+      containers.podman.podman_image_info: 
+      register: podman_image
+
+    - name: Get container info
+      containers.podman.podman_container_info:
+      register: podman_container
+
+    - name: Assert container info
+      assert:
+        that:
+          - "(podman_image.images | length) == 1"
+          - "podman_image.images[0].Config.Labels.name == 'rhel9/httpd-24'"
+          - "podman_image.images[0].RepoTags[0] == 'registry.access.redhat.com/ubi9/httpd-24:latest'"
+        fail_msg: "ERROR: Podman image not pulled correctly"
+        quiet: true
+
+    - name: Assert container info
+      assert:
+        that:
+          - "(podman_container.containers | length) == 1"
+          - "podman_container.containers[0].State.Status == 'running'"
+          - "(podman_container.containers[0].NetworkSettings.Ports['8080/tcp'] | first).HostPort == '8090'"
+          - "podman_container.containers[0].HostConfig.Binds[0] == '/home/contsvc/webcontent:/var/www:rw,rprivate,rbind'"
+        fail_msg: "ERROR: Podman container not created properly"
+        quiet: true

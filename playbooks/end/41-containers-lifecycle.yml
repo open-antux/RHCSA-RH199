@@ -1,0 +1,35 @@
+---
+- name: END 41-containers-lifecycle
+  hosts: servera
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Stop service
+      systemd:
+        name: container-webapp
+        state: stopped
+        scope: user
+      become_user: contsvc
+
+    - name: Get processes
+      command: "ps aux"
+      register: processes
+
+    - name: Kill systemd --user process
+      command: "kill {{ pid }}"
+      vars:
+        pid: "{{ processes.stdout | regex_search('.*systemctl --user.*', multiline=True) | split | first }}"
+      
+    - name: Remove contsvc user
+      user: state=absent name=contsvc
+
+    - name: Remove id_contsvc on workstation
+      file: state=absent path=/home/student/.ssh/id_contsvc
+      delegate_to: workstation
+
+    - name: Uninstall podman
+      dnf: state=absent name=podman
+
+    - name: Reboot
+      reboot:
